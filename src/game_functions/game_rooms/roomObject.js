@@ -12,7 +12,6 @@ class Room{
         this.mode=mode;
         this.users = new UsersList();
     }
-    
 }
 
 

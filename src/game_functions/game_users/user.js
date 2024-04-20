@@ -2,6 +2,7 @@ const Player = require('./player');
 
 class User extends Player{
     constructor(id,name){
+        super();
         this.socketId = id;
         this.name = name;
     }
@@ -11,6 +12,5 @@ class User extends Player{
     }
 
 }
-
 
 module.exports = User

@@ -9,15 +9,12 @@ const Deck = require("./Deck");
 const cardSchema = new Schema({
     value: {
         type: Number,
-      
     },
     suit: {
-        type: String,
-        
+        type: String, 
     },
     img:{
         type: String,
-        
     },
     deck:{
         type: Types.ObjectId,
