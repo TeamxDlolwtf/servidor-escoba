@@ -4,6 +4,7 @@ const {connectDB} = require('../db');
 
 const  getAllCards = async () => {
     try {
+        connectDB()
         const cards = await Card.find({}).populate('deck',{name:1});
         console.log('este es el resultado del populate: ', cards);
         if(cards) return cards 
