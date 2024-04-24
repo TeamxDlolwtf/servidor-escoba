@@ -13,6 +13,8 @@ function configureSocketHandlers(io) {
         socketController.handleDeleteRoom(io, socket);
         socketController.handleJoinRoom(io, socket);
         socketController.handlePartRoom(io, socket);
+        socketController.handleKickParty(io,socket);
+        socketController.handleSendParty(io,socket);
     });
 }
 

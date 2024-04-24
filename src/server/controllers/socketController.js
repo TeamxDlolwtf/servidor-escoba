@@ -29,6 +29,12 @@ function handleDisconnect(io, socket) {
     socket.on('disconnect',(reason)=>{
         console.log(`${socket.id} se ha desconectado, razón: ${reason}`);
         ServerListUsers.remUser(socket.id);
+        const isOwner = ListRoom.getRoomById(socket.id);
+        console.log(isOwner);
+        if(isOwner){
+            ListRoom.deleteRoom(socket.id);
+            io.emit('updateListRooms',ListRoom.rooms);
+        } 
 
         io.emit('updateListUsers',ServerListUsers.users);
     })
@@ -40,9 +46,12 @@ function handleDisconnect(io, socket) {
 
 function handleCreateRoom(io,socket){
     socket.on('createRoom', ({mode=1,socketID}) => {
-        const user = ServerListUsers.getUserById(socketID);
-        ListRoom.createRoom(mode,user);
-        io.emit('updateListRooms',ListRoom.rooms);
+        const isOwner = ListRoom.getRoomById(socket.id);
+        if(!isOwner){
+            const user = ServerListUsers.getUserById(socketID);
+            ListRoom.createRoom(mode,user);
+            io.emit('updateListRooms',ListRoom.rooms);
+        }
     });
 }
 
@@ -65,8 +74,10 @@ function handleJoinRoom(io,socket){
         const findRoom = ListRoom.getRoomById(OwnerId);
         const findUser = ServerListUsers.getUserById(socket.id);
         // ...findUser = socketId , name
-        findRoom.users.addUser(findUser.socketId,findUser.name);
-        io.emit('updateListRooms',ListRoom.rooms);
+        if(socket.id !== OwnerId){
+            findRoom.users.addUser(findUser.socketId,findUser.name);
+            io.emit('updateListRooms',ListRoom.rooms);
+        }
     } )
 }
 
@@ -74,10 +85,35 @@ function handlePartRoom(io,socket){
      socket.on('partRoom',(OwnerId) => {
         const findRoom = ListRoom.getRoomById(OwnerId);
         findRoom.users.remUser(socket.id);
+        const isOwner = ListRoom.getRoomById(socket.id);
+        if(isOwner) ListRoom.deleteRoom(socket.id);
         io.emit('updateListRooms',ListRoom.rooms);
      });
 }
 
+function handleSendParty(io,socket){
+    socket.on('sendParty',(targetId) => {
+        const findRoomOwner = ListRoom.getRoomById(socket.id);
+        const findTarget = ServerListUsers.getUserById(targetId);
+        const findOwner = ServerListUsers.getUserById(socket.id);
+        if(findRoomOwner && findTarget){
+            console.log(`${findOwner.name} esta invitando a ${findTarget.name}`)
+            io.to(targetId).emit("sendInvite",findOwner);
+        }
+    });
+}
+
+function handleKickParty(io,socket){
+    socket.on('kick',(targetId) =>{
+        const findRoomOwner = ListRoom.getRoomById(socket.id);
+        if(findRoomOwner){
+            console.log(findRoomOwner);
+            findRoomOwner.users.remUser(targetId);
+            io.to(targetId).emit('kick');
+            io.emit('updateListRooms',ListRoom.rooms);
+        }
+    })
+}
 
 module.exports = {
     handleCreateUser,
@@ -87,6 +123,8 @@ module.exports = {
     handleGetRooms,
     handleGetListUsers,
     handleJoinRoom,
-    handlePartRoom
+    handlePartRoom,
+    handleKickParty,
+    handleSendParty
 };
 
